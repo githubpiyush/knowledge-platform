@@ -1,0 +1,52 @@
+{
+  "$id": "book-schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Book",
+  "type": "object",
+  "required": [
+    "title",
+    "subTitle",
+    "cost",
+    "pageCount",
+    "synopsis",
+    "paperQuality",
+    "type"
+  ],
+    "properties": {
+      "title": {
+        "type": "string"
+      },
+      "subTitle": {
+        "type": "string"
+      },
+      "cost": {
+        "type": "number"
+      },
+      "pageCount": {
+        "type": "number"
+      },
+      "paperQuality": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "handcover",
+          "paperback"
+        ]
+      },
+      "visibility": {
+        "type": "string",
+        "enum": [
+          "default",
+          "parent"
+        ],
+        "default": "default"
+      },
+      "synopsis": {
+        "type": "string",
+        "description": "External Property"
+      }
+    },
+  "additionalProperties": false
+  }

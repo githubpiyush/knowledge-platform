@@ -1,0 +1,36 @@
+{
+  "objectType": "BoxSet",
+  "relations": {
+    "children": {
+      "type": "hasSequenceMember",
+      "direction": "out",
+      "objects": [
+        "Book"
+      ]
+    }
+  },
+  "version": "enable",
+  "versionCheckMode": "OFF",
+  "frameworkCategories": [],
+  "orgFrameworkTerms": [],
+  "targetFrameworkTerms": [],
+  "cacheEnabled": false,
+  "schema_restrict_api": true,
+  "restrictProps": {
+    "create": [
+      "identifier"
+    ]
+  },
+  "external": {
+    "tableName": "boxset_hierarchy",
+    "properties": {
+      "summary": {
+        "type": "string"
+      },
+      "bookList": {
+        "type": "string"
+      }
+    },
+    "primaryKey": ["identifier"]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "objectType": "Book",
+  "relations": {
+    "boxSet": {
+      "type": "hasSequenceMember",
+      "direction": "in",
+      "objects": ["BoxSet"]
+    }
+  },
+  "restrictProps": {
+    "create": [
+      "identifier",
+      "objectType"
+    ]
+  },
+  "version": "enable",
+  "versionCheckMode": "ON",
+  "frameworkCategories": [],
+  "orgFrameworkTerms": [],
+  "targetFrameworkTerms": [],
+  "cacheEnabled": false,
+  "schema_restrict_api": true,
+  "external": {
+    "tableName": "book_data",
+    "properties": {
+      "synopsis": {
+        "type": "string"
+      }
+    },
+    "primaryKey": ["identifier"]
+  }
+}
