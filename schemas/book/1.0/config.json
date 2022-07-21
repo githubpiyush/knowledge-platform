@@ -10,7 +10,8 @@
   "restrictProps": {
     "create": [
       "identifier",
-      "objectType"
+      "objectType",
+      "visibility"
     ]
   },
   "version": "enable",

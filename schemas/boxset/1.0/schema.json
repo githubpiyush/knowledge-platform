@@ -6,12 +6,10 @@
   "required": [
     "title",
     "bookCount",
-    "summary",
     "cost",
     "author",
     "weight",
     "year",
-    "bookList",
     "status"
   ],
   "properties": {
@@ -29,7 +27,8 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "External Property"
     },
     "cost": {
       "type": "number"

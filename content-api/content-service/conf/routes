@@ -132,7 +132,7 @@ GET    /collection/v4/export/:collectionId          controllers.v4.CollectionCon
 POST   /collection/v4/review/:identifier            controllers.v4.CollectionController.review(identifier:String)
 
 # Boxset V4 APIs
-POST    /boxset/v4/create                      controllers.v4.BoxsetController.create
+POST    /boxset/v4/create                      controllers.v4.BoxSetController.create
 
 # Book V4 APIs
 POST    /book/v4/create                      controllers.v4.BookController.create
