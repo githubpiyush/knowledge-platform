@@ -3,7 +3,7 @@ package modules
 import com.google.inject.AbstractModule
 import org.sunbird.channel.actors.ChannelActor
 import org.sunbird.collectioncsv.actors.CollectionCSVActor
-import org.sunbird.content.actors.{AppActor, AssetActor, CategoryActor, CollectionActor, ContentActor, EventActor, EventSetActor, HealthActor, LicenseActor, ObjectActor}
+import org.sunbird.content.actors.{AppActor, AssetActor, BookActor, BoxSetActor, CategoryActor, CollectionActor, ContentActor, EventActor, EventSetActor, HealthActor, LicenseActor, ObjectActor}
 import play.libs.akka.AkkaGuiceSupport
 import utils.ActorNames
 
@@ -14,6 +14,8 @@ class ContentModule extends AbstractModule with AkkaGuiceSupport {
         //super.configure()
         bindActor(classOf[HealthActor], ActorNames.HEALTH_ACTOR)
         bindActor(classOf[ContentActor], ActorNames.CONTENT_ACTOR)
+        bindActor(classOf[BoxSetActor], ActorNames.BOXSET_ACTOR)
+        bindActor(classOf[BookActor], ActorNames.BOOK_ACTOR)
         bindActor(classOf[LicenseActor], ActorNames.LICENSE_ACTOR)
         bindActor(classOf[CollectionActor], ActorNames.COLLECTION_ACTOR)
         bindActor(classOf[EventActor], ActorNames.EVENT_ACTOR)

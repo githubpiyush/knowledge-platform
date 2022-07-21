@@ -87,6 +87,14 @@ object ApiId {
 
   val CREATE_EVENT = "api.event.create"
   val UPDATE_EVENT = "api.event.update"
+	// Boxset API
+	val CREATE_BOXSET = "api.boxset.create"
+	val UPDATE_BOXSET = "api.boxset.update"
+	val READ_BOXSET = "api.boxset.read"
+
+	val CREATE_BOOK = "api.book.create"
+	val UPDATE_BOOK = "api.book.update"
+	val READ_BOOK = "api.book.read"
 
   val CREATE_EVENT_SET = "api.eventset.create"
   val UPDATE_EVENT_SET = "api.eventset.update"
