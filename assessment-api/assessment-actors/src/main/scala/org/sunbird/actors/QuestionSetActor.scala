@@ -48,6 +48,9 @@ class QuestionSetActor @Inject()(implicit oec: OntologyEngineContext) extends Ba
 	def update(request: Request): Future[Response] = {
 		RequestUtil.restrictProperties(request)
 		request.getRequest.put("identifier", request.getContext.get("identifier"))
+
+		println("11",request, request.getClass)
+		println("22", request.getContext, request.getParams)
 		AssessmentManager.getValidatedNodeForUpdate(request, "ERR_QUESTION_SET_UPDATE").flatMap(_ => AssessmentManager.updateNode(request))
 	}
 

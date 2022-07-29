@@ -5,8 +5,6 @@
   "type": "object",
   "required": [
     "title",
-    "bookCount",
-    "cost",
     "author",
     "weight",
     "year",
@@ -49,6 +47,16 @@
         "in-stock",
         "under-review"
       ]
+    },
+    "channel": {
+      "type": "string"
+    },
+    "version": {
+      "type": "number",
+      "default": 1
+    },
+    "versionKey": {
+      "type": "string"
     }
   }
 }

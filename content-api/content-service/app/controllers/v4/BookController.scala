@@ -21,12 +21,15 @@ class BookController @Inject()(@Named(ActorNames.BOOK_ACTOR) bookActor: ActorRef
   def create() = Action.async { implicit request =>
     val headers = commonHeaders()
     val body = requestBody()
-    val book = body.getOrDefault(schemaName, new java.util.HashMap()).asInstanceOf[java.util.Map[String, Object]];
+    val book = body.getOrDefault(schemaName, new java.util.HashMap()).asInstanceOf[java.util.Map[String, AnyRef]];
     book.putAll(headers)
+    println(headers, body, book)
 
     val bookRequest = getRequest(book, headers, "createBook")
     setRequestContext(bookRequest, version, objectType, schemaName)
+    println(bookRequest)
     getResult(ApiId.CREATE_BOOK, bookActor, bookRequest)
+
   }
 
   def read(identifier: String, mode: Option[String], fields: Option[String]) = Action.async { implicit request =>

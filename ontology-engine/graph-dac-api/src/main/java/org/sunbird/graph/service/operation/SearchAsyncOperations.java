@@ -160,10 +160,10 @@ public class SearchAsyncOperations {
             throw new ClientException(DACErrorCodeConstants.INVALID_GRAPH.name(),
                     DACErrorMessageConstants.INVALID_GRAPH_ID + " | ['Get Node By Unique Id' Operation Failed.]");
 
-        if (StringUtils.isBlank(nodeId))
+        if (StringUtils.isBlank(nodeId)) {
             throw new ClientException(DACErrorCodeConstants.INVALID_IDENTIFIER.name(),
                     DACErrorMessageConstants.INVALID_IDENTIFIER + " | ['Get Node By Unique Id' Operation Failed.]");
-
+        }
             Driver driver = DriverUtil.getDriver(graphId, GraphOperation.READ);
             TelemetryManager.log("Driver Initialised. | [Graph Id: " + graphId + "]");
             try (Session session = driver.session()) {

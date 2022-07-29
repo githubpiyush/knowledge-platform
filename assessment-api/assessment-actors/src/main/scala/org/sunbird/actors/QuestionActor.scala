@@ -44,6 +44,8 @@ class QuestionActor @Inject()(implicit oec: OntologyEngineContext) extends BaseA
 		RequestUtil.restrictProperties(request)
 		request.getRequest.put("identifier", request.getContext.get("identifier"))
 		request.getRequest.put("artifactUrl",null)
+		println("11",request, request.getClass)
+		println("22", request.getOperation, request.getParams)
 		AssessmentManager.getValidatedNodeForUpdate(request, "ERR_QUESTION_UPDATE").flatMap(_ => AssessmentManager.updateNode(request))
 	}
 

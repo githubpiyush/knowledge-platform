@@ -42,9 +42,19 @@
         ],
         "default": "default"
       },
+      "channel": {
+        "type": "string"
+      },
       "synopsis": {
         "type": "string",
         "description": "External Property"
+      },
+      "version": {
+        "type": "number",
+        "default": 1
+      },
+      "versionKey": {
+        "type": "string"
       }
     },
   "additionalProperties": false

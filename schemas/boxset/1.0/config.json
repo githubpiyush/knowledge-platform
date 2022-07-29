@@ -18,7 +18,9 @@
   "schema_restrict_api": true,
   "restrictProps": {
     "create": [
-      "identifier"
+      "identifier",
+      "bookCount",
+      "cost"
     ]
   },
   "external": {

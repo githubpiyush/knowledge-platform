@@ -21,11 +21,13 @@ class BoxSetController @Inject()(@Named(ActorNames.BOXSET_ACTOR) boxsetActor: Ac
   def create() = Action.async { implicit request =>
     val headers = commonHeaders()
     val body = requestBody()
-    val boxset = body.getOrDefault(schemaName, new java.util.HashMap()).asInstanceOf[java.util.Map[String, Object]];
+    val boxset = body.getOrDefault(schemaName, new java.util.HashMap()).asInstanceOf[java.util.Map[String, AnyRef]];
     boxset.putAll(headers)
+    println(headers, body, boxset)
 
     val boxsetRequest = getRequest(boxset, headers, "createBoxset")
     setRequestContext(boxsetRequest, version, objectType, schemaName)
+    println(boxsetRequest)
     getResult(ApiId.CREATE_BOXSET, boxsetActor, boxsetRequest)
   }
 

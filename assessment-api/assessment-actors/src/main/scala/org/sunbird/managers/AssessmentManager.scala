@@ -68,12 +68,16 @@ object AssessmentManager {
 	}
 
 	def updateNode(request: Request)(implicit oec: OntologyEngineContext, ec: ExecutionContext): Future[Response] = {
+		println("updateNode 11",request, request.getClass)
+		println("updateNode 22", request.getOperation, request.getParams)
 		DataNode.update(request).map(node => {
 			ResponseHandler.OK.putAll(Map("identifier" -> node.getIdentifier.replace(".img", ""), "versionKey" -> node.getMetadata.get("versionKey")).asJava)
 		})
 	}
 
 	def getValidatedNodeForUpdate(request: Request, errCode: String)(implicit ec: ExecutionContext, oec: OntologyEngineContext): Future[Node] = {
+		println("getValidatedNodeForUpdate 11",request, request.getClass)
+		println("getValidatedNodeForUpdate 22", request.getOperation, request.getParams)
 		DataNode.read(request).map(node => {
 			if (StringUtils.equalsIgnoreCase(node.getMetadata.getOrDefault("visibility", "").asInstanceOf[String], "Parent"))
 				throw new ClientException(errCode, node.getMetadata.getOrDefault("objectType", "").asInstanceOf[String].replace("Image", "") + " with visibility Parent, can't be updated individually.")

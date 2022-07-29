@@ -70,7 +70,8 @@ trait VersioningNode extends IDefinition {
         }
     }
 
-    private def getEditableNode(identifier: String, node: Node)(implicit ec: ExecutionContext, oec: OntologyEngineContext): Future[Node] = {
+    private def
+    getEditableNode(identifier: String, node: Node)(implicit ec: ExecutionContext, oec: OntologyEngineContext): Future[Node] = {
         val status = node.getMetadata.get("status").asInstanceOf[String]
         if(statusList.contains(status)) {
             val imageId = node.getIdentifier + IMAGE_SUFFIX
