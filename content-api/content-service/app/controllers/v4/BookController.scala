@@ -43,16 +43,16 @@ class BookController @Inject()(@Named(ActorNames.BOOK_ACTOR) bookActor: ActorRef
     getResult(ApiId.READ_BOOK, bookActor, bookRequest)
   }
 
-  def update(identifier: String) = Action.async { implicit request =>
-    val headers = commonHeaders()
-    val body = requestBody()
-    val book = body.getOrDefault(schemaName, new java.util.HashMap()).asInstanceOf[java.util.Map[String, Object]];
-    book.putAll(headers)
-    val bookRequest = getRequest(book, headers, "updateBook")
-    setRequestContext(bookRequest, version, objectType, schemaName)
-    bookRequest.getContext.put("identifier", identifier);
-    getResult(ApiId.UPDATE_BOXSET, bookActor, bookRequest)
-
-  }
+//  def update(identifier: String) = Action.async { implicit request =>
+//    val headers = commonHeaders()
+//    val body = requestBody()
+//    val book = body.getOrDefault(schemaName, new java.util.HashMap()).asInstanceOf[java.util.Map[String, Object]];
+//    book.putAll(headers)
+//    val bookRequest = getRequest(book, headers, "updateBook")
+//    setRequestContext(bookRequest, version, objectType, schemaName)
+//    bookRequest.getContext.put("identifier", identifier);
+//    getResult(ApiId.UPDATE_BOXSET, bookActor, bookRequest)
+//
+//  }
 
 }

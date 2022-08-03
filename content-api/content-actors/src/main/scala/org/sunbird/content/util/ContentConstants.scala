@@ -58,6 +58,8 @@ object ContentConstants {
     val COPY_SCHEME:String = "copyScheme"
     val ERR_BOXSET_BOOK_COUNT: String = "ERR_BOXSET_LESS_BOOK"
     val ERR_NULL_BOOK_ID : String = "ERR_INVALID_BOOK_ID"
+    val EXISTS_BOOK_ID : String = "EXISTS_BOOK_ID"
+    val ERR_MIN_BOOK : String = "ERR_MIN_BOOK"
     val ERR_USED_BOOK_ID : String = "ERR_USED_BOOK_ID"
     val ERR_BOXSET_COST : String = "ERR_BOXSET_COST"
 
