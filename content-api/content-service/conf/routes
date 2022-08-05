@@ -135,7 +135,7 @@ POST   /collection/v4/review/:identifier            controllers.v4.CollectionCon
 POST    /boxset/v4/create                      controllers.v4.BoxSetController.create
 PATCH   /boxset/v4/addBook/:identifier          controllers.v4.BoxSetController.addBook(identifier:String, fields:Option[String])
 GET     /boxset/v4/read/:identifier           controllers.v4.BoxSetController.read(identifier:String, mode:Option[String], fields:Option[String])
-PATCH  /boxset/v4/remove/:identifier         controllers.v4.BoxSetController.remove(identifier:String, fields:Option[String])
+PATCH  /boxset/v4/removeBook/:identifier         controllers.v4.BoxSetController.removeBook(identifier:String, fields:Option[String])
 
 # Book V4 APIs
 POST    /book/v4/create                      controllers.v4.BookController.create

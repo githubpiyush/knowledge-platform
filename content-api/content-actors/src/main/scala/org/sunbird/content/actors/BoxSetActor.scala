@@ -1,7 +1,7 @@
 package org.sunbird.content.actors
 
 import org.apache.commons.lang3.StringUtils
-import org.apache.kafka.common.utils.Java
+//import org.apache.kafka.common.utils.Java
 import org.sunbird.actor.core.BaseActor
 import org.sunbird.common.dto.{Request, Response, ResponseHandler}
 import org.sunbird.common.exception.ClientException
@@ -14,7 +14,7 @@ import org.sunbird.util.RequestUtil
 
 import java.util
 import java.util.concurrent.CompletionException
-import scala.collection.{JavaConverters, mutable}
+import scala.collection.JavaConverters
 
 //import java.time.
 import javax.inject.Inject
@@ -22,44 +22,44 @@ import collection.JavaConversions._
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.collection.JavaConverters._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseActor {
-  implicit var bookCost: Long = 0
   implicit val ec: ExecutionContext = getContext().dispatcher
 
   override def onReceive(request: Request): Future[Response] = request.getOperation match {
     case "createBoxset" => create(request)
     case "readBoxset" => read(request, "boxset")
     case "addBook" => addBook(request)
-    case "removeBook" => remove(request)
+    case "removeBook" => removeBook(request)
     case _ => ERROR(request.getOperation)
   }
 
-  def first_fun(request: Request, book: String) = {
+  def getTotalCost(request: Request, BookList: util.List[String],size: Int, total:Long = 0):Future[Long]={
+    if(size == 0) Future(total)
+    else{
+      val book = BookList.apply(size-1)
+      val bookRead = new Request(request)
+      bookRead.getContext.put("graph_id", "domain")
+      bookRead.getContext.put("schemaName", "book")
+      bookRead.getContext.put("identifier", book)
+      bookRead.getContext.put("objectType", "Book")
+      bookRead.getContext.put("version", "1.0")
 
-    val bookRead = new Request(request)
-    bookRead.getContext.put("graph_id", "domain")
-    bookRead.getContext.put("schemaName", "book")
-    bookRead.getContext.put("objectType", "Book")
-    bookRead.getContext.put("version", "1.0")
+      bookRead.setObjectType("Book")
 
-    bookRead.setObjectType("Book")
+      val bookValue = new util.HashMap[String, Object]()
+      bookValue.putAll(Map("identifier" -> book).asJava)
+      bookRead.copyRequestValueObjects(bookValue)
+      bookRead.setOperation("readBook")
 
-    val bookValue = new util.HashMap[String, Object]()
-    bookValue.putAll(Map("identifier" -> book).asJava)
-    bookRead.copyRequestValueObjects(bookValue)
-    bookRead.setOperation("readBook")
+      println("Book read 1", bookRead, bookRead.getClass)
+      println("Book read 2", bookRead.getOperation)
 
-    println("Book read 1", bookRead, bookRead.getClass)
-    println("Book read 2", bookRead.getOperation)
-
-    DataNode.read(bookRead).map(node => {
-      bookCost += node.getMetadata.get("cost").asInstanceOf[Long]
-      println(bookCost, "inside read")
-
-    })
-
+      DataNode.read(bookRead).map(node1 => {
+        val cost = node1.getMetadata.get("cost").asInstanceOf[Long]
+        getTotalCost(request,BookList, size-1, total+cost)
+      }).flatMap(f=>f)
+    }
   }
 
   def check_n_create(request: Request)(implicit oec: OntologyEngineContext, ec: ExecutionContext): Future[Response] = {
@@ -67,96 +67,61 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
     if (bookList.size() < 2)
       throw new ClientException(ContentConstants.ERR_BOXSET_BOOK_COUNT, "Less than two books or bookCount doesn't match with bookList size")
 
-    bookList.map(book => {
-      first_fun(request, book)
+    getTotalCost(request,bookList,bookList.size()).flatMap(totalCost=> {
+      request.getRequest.put("bookCount", bookList.size().asInstanceOf[Object])
+      request.getRequest.put("cost", (totalCost * 0.80).asInstanceOf[Object])
 
-    })
-    println(bookCost, "before update")
-    request.getRequest.put("bookCount", bookList.size().asInstanceOf[Object])
-    request.getRequest.put("cost", (bookCost * 0.80).asInstanceOf[Object])
-    println(request, "req")
-    //    Check before adding to boxset if all good comment below line
-    throw new ClientException(ContentConstants.ERR_BOXSET_BOOK_COUNT, "Less than two books or bookCount doesn't match with bookList size")
-    DataNode.create(request).map(node => {
-      println(request, "Final +============")
-      val response = ResponseHandler.OK
-      response.putAll(Map("identifier" -> node.getIdentifier, "versionKey" -> node.getMetadata.get("versionKey")).asJava)
+      DataNode.create(request).map(node => {
+        println(request, "Final +============")
+        val response = ResponseHandler.OK
+        response.putAll(Map("identifier" -> node.getIdentifier, "versionKey" -> node.getMetadata.get("versionKey")).asJava)
+      })
     })
   }
 
   def create(request: Request)(implicit oec: OntologyEngineContext, ec: ExecutionContext): Future[Response] = {
     RequestUtil.restrictProperties(request)
-    bookCost = 0
     check_n_create(request)
   }
 
+
   def addBook(request: Request)(implicit oec: OntologyEngineContext, ec: ExecutionContext): Future[Response] = {
     RequestUtil.restrictProperties(request)
-    println("11", request, request.get("fields"))
-    println("22", request.getContext, request.getParams)
 
     DataNode.read(request).flatMap(node => {
-      println(node, node.getMetadata, node.getExternalData, "yyyyyyyyy")
       var bookList: util.List[String] = JavaConverters.seqAsJavaListConverter(node.getMetadata.get("bookList").asInstanceOf[String].replace("[", "").replace("]", "").replace("\"", "").split(",").filter(field => StringUtils.isNotBlank(field) && !StringUtils.equalsIgnoreCase(field, "null"))).asJava
       val newBookList = request.getRequest.getOrDefault("bookList", new util.ArrayList[String]).asInstanceOf[util.List[String]]
-      bookCost = 0
+      var bookCost: Long = 0
       val cost = node.getMetadata.get("cost").asInstanceOf[Number].longValue
 
-      println(cost, "Cost", cost.getClass)
-      println(newBookList, bookList, JavaConverters.seqAsJavaListConverter(node.getMetadata.get("bookList").asInstanceOf[String]), "zzzz")
+//      println(cost, "Cost", cost.getClass)
+//      println(newBookList, bookList, JavaConverters.seqAsJavaListConverter(node.getMetadata.get("bookList").asInstanceOf[String]), "zzzz")
 
-      newBookList.map(book => {
-        val bookRead = new Request(request)
-        bookRead.getContext.put("graph_id", "domain")
-        bookRead.getContext.put("schemaName", "book")
-        bookRead.getContext.put("identifier", book)
-        bookRead.getContext.put("objectType", "Book")
-        bookRead.getContext.put("version", "1.0")
+      getTotalCost(request,newBookList,newBookList.size()).map(totalCost=> {
+        if (bookList.exists {newBookList.contains})
+          throw new ClientException(ContentConstants.EXISTS_BOOK_ID, s"One Book ID already exists")
+        bookList = bookList ++ newBookList
+        request.getRequest.put("bookList", bookList)
 
-        bookRead.setObjectType("Book")
+        bookCost = (totalCost * 0.80).asInstanceOf[Number].longValue() + cost
+        request.getRequest.put("cost", bookCost.asInstanceOf[Object])
+        request.getRequest.put("bookCount", (bookList.size()).asInstanceOf[Object])
 
-        val bookValue = new util.HashMap[String, Object]()
-        bookValue.putAll(Map("identifier" -> book).asJava)
-        bookRead.copyRequestValueObjects(bookValue)
-        bookRead.setOperation("readBook")
+        request.getRequest.remove("mode", "edit")
+        request.getRequest.remove("fields", request.getRequest.get("fields"))
 
-        println("Book read 1", bookRead, bookRead.getClass)
-        println("Book read 2", bookRead.getOperation)
+//        println(bookList, newBookList, cost, bookCost, "RRRRRRRRR")
+//        println("444", request, request.getParams)
 
-        DataNode.read(bookRead).map(node1 => {
-          bookCost += node1.getMetadata.get("cost").asInstanceOf[Long]
-          println(bookCost, "inside readnode")
+        println(request, "final+++++++++")
+        DataNode.update(request).map(node2 => {
+          val response = ResponseHandler.OK
+          response.putAll(Map("identifier" -> node2.getIdentifier.replace(".img", ""), "versionKey" -> node2.getMetadata.get("versionKey")).asJava)
+          response
         })
-      })
-
-      if (bookList.exists {
-        newBookList.contains
-      })
-        throw new ClientException(ContentConstants.EXISTS_BOOK_ID, s"One Book ID already exists")
-      bookList = bookList ++ newBookList
-      request.getRequest.put("bookList", bookList)
-
-      bookCost = (bookCost * 0.80).asInstanceOf[Number].longValue() + cost
-      request.getRequest.put("cost", bookCost.asInstanceOf[Object])
-      request.getRequest.put("bookCount", (bookList.size()).asInstanceOf[Object])
-
-      request.getRequest.remove("mode", "edit")
-      request.getRequest.remove("fields", request.getRequest.get("fields"))
-
-      println(bookList, newBookList, cost, bookCost, "RRRRRRRRR")
-      println("444", request, request.getParams)
-
-      println(request, "final+++++++++")
-      //    Check before adding to boxset if all good comment below line
-      throw new ClientException(ContentConstants.EXISTS_BOOK_ID, s"One Book ID already exists")
-      DataNode.update(request).map(node2 => {
-        val response = ResponseHandler.OK
-        response.putAll(Map("identifier" -> node2.getIdentifier.replace(".img", ""), "versionKey" -> node2.getMetadata.get("versionKey")).asJava)
-
-      })
+      }).flatMap(f=>f) recoverWith { case e: CompletionException => throw e.getCause }
     })
-
-  }
+}
 
   def read(request: Request, resName: String)(implicit oec: OntologyEngineContext, ec: ExecutionContext): Future[Response] = {
     RequestUtil.restrictProperties(request)
@@ -201,59 +166,38 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
     })
   }
 
-  def remove(request: Request)(implicit oec: OntologyEngineContext, ec: ExecutionContext): Future[Response] = {
+  def removeBook(request: Request)(implicit oec: OntologyEngineContext, ec: ExecutionContext): Future[Response] = {
     RequestUtil.restrictProperties(request)
     val deleteBookList = request.getRequest.getOrDefault("bookList", new util.ArrayList[String]).asInstanceOf[util.List[String]]
-    bookCost = 0
-    DataNode.read(request).map(node => {
-      println(node, node.getMetadata, node.getExternalData, "yyyyyyyyy")
+
+    DataNode.read(request).flatMap(node => {
       var cost = node.getMetadata.get("cost").asInstanceOf[Number].longValue
       var bookList: util.List[String] = JavaConverters.seqAsJavaListConverter(node.getMetadata.get("bookList").asInstanceOf[String].replace("[", "").replace("]", "").replace("\"", "").split(",").filter(field => StringUtils.isNotBlank(field) && !StringUtils.equalsIgnoreCase(field, "null"))).asJava
       val deleteBookList = request.getRequest.getOrDefault("bookList", new util.ArrayList[String]).asInstanceOf[util.List[String]]
 
       if (bookList.size() - deleteBookList.size() < 2)
         throw new ClientException(ContentConstants.ERR_MIN_BOOK, "Boxset requires min 2 books after deletion")
-      bookList = bookList.filter(x => deleteBookList.contains(x))
-      println(bookList, deleteBookList, "Books")
-      deleteBookList.map(book => {
-        val bookRead = new Request(request)
-        bookRead.getContext.put("graph_id", "domain")
-        bookRead.getContext.put("schemaName", "book")
-        bookRead.getContext.put("identifier", book)
-        bookRead.getContext.put("objectType", "Book")
-        bookRead.getContext.put("version", "1.0")
+      bookList = bookList diff deleteBookList
+      getTotalCost(request, deleteBookList, deleteBookList.size()).map(totalCost => {
 
-        bookRead.setObjectType("Book")
-
-        val bookValue = new util.HashMap[String, Object]()
-        bookValue.putAll(Map("identifier" -> book).asJava)
-        bookRead.copyRequestValueObjects(bookValue)
-        bookRead.setOperation("readBook")
-
-        println("Book read 1", bookRead, bookRead.getClass)
-        println("Book read 2", bookRead.getOperation)
-
-        DataNode.read(bookRead).map(node1 => {
-          bookCost += node1.getMetadata.get("cost").asInstanceOf[Long]
-        })
-      }).map(_ => {
-        cost = (cost - (bookCost * 0.80)).asInstanceOf[Number].longValue()
+        cost = (cost - (totalCost * 0.80)).asInstanceOf[Number].longValue()
         request.getRequest.put("bookList", bookList)
         request.getRequest.put("cost", cost.asInstanceOf[Object])
         request.getRequest.put("bookCount", (bookList.size()).asInstanceOf[Object])
 
         request.getRequest.remove("mode", "edit")
         request.getRequest.remove("fields", request.getRequest.get("fields"))
+
+        print(request, "final+++++++++")
+
+        DataNode.update(request).map(node => {
+          val response = ResponseHandler.OK
+          response.putAll(Map("identifier" -> node.getIdentifier, "versionKey" -> node.getMetadata.get("versionKey")).asJava)
+        })
+
       })
 
-    })
-    print(request, "final+++++++++")
-    throw new ClientException(ContentConstants.EXISTS_BOOK_ID, s"One Book ID already exists")
-
-    DataNode.update(request).map(node => {
-      val response = ResponseHandler.OK
-      response.putAll(Map("identifier" -> node.getIdentifier, "versionKey" -> node.getMetadata.get("versionKey")).asJava)
-    })
+    }).flatMap(f=>f) recoverWith { case e: CompletionException => throw e.getCause }
   }
 
 

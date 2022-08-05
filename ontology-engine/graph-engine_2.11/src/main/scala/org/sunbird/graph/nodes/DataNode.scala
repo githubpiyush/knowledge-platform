@@ -40,12 +40,9 @@ object DataNode {
     def update(request: Request, dataModifier: (Node) => Node = defaultDataModifier)(implicit oec: OntologyEngineContext, ec: ExecutionContext): Future[Node] = {
         val identifier: String = request.getContext.get("identifier").asInstanceOf[String]
         DefinitionNode.validate(identifier, request).map(node => {
-            println("(((((((((1st Node)))))", node, node.getObjectType)
             request.getContext().put("schemaName", node.getObjectType.toLowerCase.replace("image", ""))
             val response = oec.graphService.upsertNode(request.graphId, dataModifier(node), request)
-            println("**************", response)
             response.map(node => DefinitionNode.postProcessor(request, node)).map(result => {
-                println(node.getIdentifier, node.getExternalData, request.getContext, request.getObjectType, request,"%%%%%%%%%%%")
                 val futureList = Task.parallel[Response](
                     updateExternalProperties(node.getIdentifier, node.getExternalData, request.getContext, request.getObjectType, request),
                     updateRelations(request.graphId, node, request.getContext))

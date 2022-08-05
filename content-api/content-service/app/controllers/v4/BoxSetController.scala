@@ -63,7 +63,7 @@ class BoxSetController @Inject()(@Named(ActorNames.BOXSET_ACTOR) boxsetActor: Ac
 
   }
 
-  def remove(identifier: String, fields: Option[String]) = Action.async { implicit request =>
+  def removeBook(identifier: String, fields: Option[String]) = Action.async { implicit request =>
     val headers = commonHeaders()
     val body = requestBody()
     val boxset = body.getOrDefault(schemaName, new java.util.HashMap()).asInstanceOf[java.util.Map[String, AnyRef]];
