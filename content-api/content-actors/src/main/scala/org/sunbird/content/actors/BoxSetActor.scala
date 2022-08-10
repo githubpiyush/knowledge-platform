@@ -51,14 +51,14 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
       bookRead.copyRequestValueObjects(bookValue)
       bookRead.setOperation("readBook")
 
-      println("Book read 1", bookRead, bookRead.getClass)
-      println("Book read 2", bookRead.getOperation)
+//      println("Book read 1", bookRead, bookRead.getClass)
+//      println("Book read 2", bookRead.getOperation)
 
       DataNode.read(bookRead).map(node1 => {
-        println(node1.getMetadata)
+//        println(node1.getMetadata)
         val cost = node1.getMetadata.get("cost").asInstanceOf[Number].longValue()
         val visibility: String = node1.getMetadata.getOrDefault("visibility", "").asInstanceOf[String]
-        println(visibility, "VISIISIISISSI")
+//        println(visibility, "VISIISIISISSI")
 
         if (StringUtils.equals(visibility, updatedVisibility))
           throw new ClientException(ContentConstants.ERR_USED_BOOK_ID, s"This book's visibility is ${updatedVisibility}  : ${node1.getIdentifier}.")
@@ -73,8 +73,8 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
         book_update.setOperation("updateBook")
         book_update.setObjectType("Book")
         book_update.getContext.remove("channel", "{{channel_id}}")
-        println("Book update 1",book_update, book_update.getClass)
-        println("Book update 2",book_update.getOperation)
+//        println("Book update 1",book_update, book_update.getClass)
+//        println("Book update 2",book_update.getOperation)
 
 
         DataNode.update(book_update).map(node2 => {
@@ -113,7 +113,7 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
     RequestUtil.restrictProperties(request)
 
     DataNode.read(request).flatMap(node => {
-      println(node.getMetadata, node.getIdentifier)
+//      println(node.getMetadata, node.getIdentifier)
       var bookList: util.List[String] = JavaConverters.seqAsJavaListConverter(node.getMetadata.get("bookList").asInstanceOf[String].replace("[", "").replace("]", "").replace("\"", "").split(",").filter(field => StringUtils.isNotBlank(field) && !StringUtils.equalsIgnoreCase(field, "null"))).asJava
       val newBookList = request.getRequest.getOrDefault("bookList", new util.ArrayList[String]).asInstanceOf[util.List[String]]
       var bookCost: Long = 0
@@ -140,7 +140,7 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
 
         println(request, "final+++++++++")
         DataNode.update(request).map(node2 => {
-          println(node2,"inside update&&&&&&&")
+//          println(node2,"inside update&&&&&&&")
           val response = ResponseHandler.OK
           response.putAll(Map("identifier" -> node2.getIdentifier.replace(".img", ""), "versionKey" -> node2.getMetadata.get("versionKey")).asJava)
           response
@@ -179,8 +179,8 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
           bookRead.copyRequestValueObjects(bookValue)
           bookRead.setOperation("readBook")
 
-          println("Book read 1", bookRead, bookRead.getClass)
-          println("Book read 2", bookRead.getOperation)
+//          println("Book read 1", bookRead, bookRead.getClass)
+//          println("Book read 2", bookRead.getOperation)
 
           DataNode.read(bookRead).map(node1 => {
             metadata.put("bookData " + node1.getIdentifier, NodeUtil.serialize(node1, List(), node1.getObjectType.toLowerCase.replace("Image", ""), request.getContext.get("version").asInstanceOf[String]))
@@ -224,98 +224,6 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
       })
 
     }).flatMap(f=>f) recoverWith { case e: CompletionException => throw e.getCause }
-  }
-
-
-  // Temp code
-
-  def getReadNode(book_read: Request)(implicit ec: ExecutionContext, oec: OntologyEngineContext): Future[Node] = {
-
-    DataNode.read(book_read).map(node => {
-      val visibility: String = node.getMetadata.getOrDefault("visibility", "").asInstanceOf[String]
-      println(visibility, "VISIISIISISSI")
-
-      //      if (StringUtils.equals(visibility, "parent"))
-      //        throw new ClientException(ContentConstants.ERR_USED_BOOK_ID, s"This book's visibility is parent  : ${node.getIdentifier}.")
-
-      node
-    })
-  }
-
-  def check_all_constraints_boxset(request: Request) = {
-    var book_cost: Long = 0
-    val bookList = request.getRequest.getOrDefault("bookList", new util.ArrayList[String]).asInstanceOf[util.List[String]]
-
-    for (i <- 0 to bookList.size() - 1) {
-      var node_present = false
-
-      val book_read = new Request(request)
-      book_read.getContext.put("graph_id", "domain")
-      book_read.getContext.put("schemaName", "book")
-      book_read.getContext.put("objectType", "Book")
-      book_read.getContext.put("version", "1.0")
-
-      book_read.setObjectType("Book")
-
-      val book_value = new util.HashMap[String, Object]()
-      book_value.putAll(Map("identifier" -> bookList.get(i)).asJava)
-      book_read.copyRequestValueObjects(book_value)
-      book_read.setOperation("readBook")
-
-      println("Book read 1", book_read, book_read.getClass)
-      println("Book read 2", book_read.getOperation)
-
-      getReadNode(book_read).map(node => {
-        node_present = true
-        val versionKey: String = node.getMetadata.getOrDefault("versionKey", "").asInstanceOf[String]
-
-        book_cost += node.getMetadata.get("cost").asInstanceOf[Long]
-
-        //        val book_update = new Request(request)
-        //        book_update.getContext.put("graph_id","domain")
-        //        book_update.getContext.put("schemaName","book")
-        //        book_update.getContext.put("identifier",bookList.get(i))
-        //        book_update.getContext.put("objectType","Book")
-        //        book_update.getContext.put("version","1.0")
-        ////        book_update.getContext.put("consumerId","X-Consumer-ID")
-        //
-        //        book_update.setObjectType("Book")
-        //
-        //        val book_update_value = new util.HashMap[String, Object]()
-        //        book_update_value.putAll(Map("versionKey" -> versionKey,"identifier" -> bookList.get(i), "visibility" -> "parent").asJava)
-        //        book_update.copyRequestValueObjects(book_update_value)
-
-        //        val fields_modify: util.List[String] = JavaConverters.seqAsJavaListConverter("synopsis".split(",").filter(field => StringUtils.isNotBlank(field) && !StringUtils.equalsIgnoreCase(field, "null"))).asJava
-        //        book_update.getRequest.put("fields", fields_modify)
-        //        book_update.getRequest.put("mode", "edit")
-
-        //        book_update.setOperation("updateBook")
-        //        book_update.getContext.remove("channel", "{{channel_id}}")
-        //        println("Book update 1",book_update, book_update.getClass)
-        //        println("Book update 2",book_update.getOperation)
-
-
-        //        DataNode.update(book_update).map(node_1 => {
-        //          ResponseHandler.OK.putAll(Map("identifier" -> node_1.getIdentifier.replace(".img", ""), "versionKey" -> node_1.getMetadata.get("versionKey")).asJava)
-        //        })
-        //        println(visibility.getClass, book_cost,book_cost.getClass, "+++++++++++++")
-        //        println(node.getMetadata.get("cost").getClass,node.getMetadata.get("visibility"))
-        //        println(node.getMetadata, node.getExternalData, node.getIdentifier, node.getNode)
-
-        //        book_update.getRequest.remove("mode","edit")
-        //        book_update.getRequest.remove("fields", book_update.getRequest.get("fields"))
-
-      })
-      Thread.sleep(5000)
-      if (!node_present)
-        throw new ClientException(ContentConstants.ERR_NULL_BOOK_ID, s"Invalid Book ID  : ${bookList.get(i)}.")
-
-    }
-    request.getRequest.put("bookCount", bookList.size().asInstanceOf[Object])
-    request.getRequest.put("cost", (book_cost * 0.80).asInstanceOf[Object])
-
-    //    if (bookList.size() < 3 )
-    //      throw new ClientException(ContentConstants.ERR_BOXSET_BOOK_COUNT, "Less than two books or bookCount doesn't match with bookList size")
   }
 
 }
