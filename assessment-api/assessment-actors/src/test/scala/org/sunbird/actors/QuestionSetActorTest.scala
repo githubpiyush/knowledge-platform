@@ -235,6 +235,7 @@ class QuestionSetActorTest extends BaseSpec with MockFactory {
             "requiresSubmit" -> "No",
             "shuffle" -> true.asInstanceOf[AnyRef],
             "showFeedback" -> "Yes",
+
             "showSolutions" -> "Yes",
             "showHints" -> "Yes",
             "summaryType" -> "Complete",

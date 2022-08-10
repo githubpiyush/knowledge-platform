@@ -1,7 +1,6 @@
 package org.sunbird.content.actors
 
 import org.apache.commons.lang3.StringUtils
-//import org.apache.kafka.common.utils.Java
 import org.sunbird.actor.core.BaseActor
 import org.sunbird.common.dto.{Request, Response, ResponseHandler}
 import org.sunbird.common.exception.ClientException
@@ -34,7 +33,7 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
     case _ => ERROR(request.getOperation)
   }
 
-  def getTotalCost(request: Request, BookList: util.List[String],size: Int, total:Long = 0):Future[Long]={
+  def getTotalCost(request: Request, BookList: util.List[String],size: Int, total:Long = 0, updatedVisibility:String = "parent"):Future[Long]={
     if(size == 0) Future(total)
     else{
       val book = BookList.apply(size-1)
@@ -56,7 +55,32 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
       println("Book read 2", bookRead.getOperation)
 
       DataNode.read(bookRead).map(node1 => {
-        val cost = node1.getMetadata.get("cost").asInstanceOf[Long]
+        println(node1.getMetadata)
+        val cost = node1.getMetadata.get("cost").asInstanceOf[Number].longValue()
+        val visibility: String = node1.getMetadata.getOrDefault("visibility", "").asInstanceOf[String]
+        println(visibility, "VISIISIISISSI")
+
+        if (StringUtils.equals(visibility, updatedVisibility))
+          throw new ClientException(ContentConstants.ERR_USED_BOOK_ID, s"This book's visibility is ${updatedVisibility}  : ${node1.getIdentifier}.")
+
+        val book_update = new Request(bookRead)
+        val versionKey: String = node1.getMetadata.getOrDefault("versionKey", "").asInstanceOf[String]
+
+        val book_update_value = new util.HashMap[String, Object]()
+        book_update_value.putAll(Map("versionKey" -> versionKey,"identifier" -> book, "visibility" -> updatedVisibility).asJava)
+        book_update.copyRequestValueObjects(book_update_value)
+
+        book_update.setOperation("updateBook")
+        book_update.setObjectType("Book")
+        book_update.getContext.remove("channel", "{{channel_id}}")
+        println("Book update 1",book_update, book_update.getClass)
+        println("Book update 2",book_update.getOperation)
+
+
+        DataNode.update(book_update).map(node2 => {
+          Future(node2)
+        })
+
         getTotalCost(request,BookList, size-1, total+cost)
       }).flatMap(f=>f)
     }
@@ -89,6 +113,7 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
     RequestUtil.restrictProperties(request)
 
     DataNode.read(request).flatMap(node => {
+      println(node.getMetadata, node.getIdentifier)
       var bookList: util.List[String] = JavaConverters.seqAsJavaListConverter(node.getMetadata.get("bookList").asInstanceOf[String].replace("[", "").replace("]", "").replace("\"", "").split(",").filter(field => StringUtils.isNotBlank(field) && !StringUtils.equalsIgnoreCase(field, "null"))).asJava
       val newBookList = request.getRequest.getOrDefault("bookList", new util.ArrayList[String]).asInstanceOf[util.List[String]]
       var bookCost: Long = 0
@@ -115,6 +140,7 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
 
         println(request, "final+++++++++")
         DataNode.update(request).map(node2 => {
+          println(node2,"inside update&&&&&&&")
           val response = ResponseHandler.OK
           response.putAll(Map("identifier" -> node2.getIdentifier.replace(".img", ""), "versionKey" -> node2.getMetadata.get("versionKey")).asJava)
           response
@@ -178,7 +204,7 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
       if (bookList.size() - deleteBookList.size() < 2)
         throw new ClientException(ContentConstants.ERR_MIN_BOOK, "Boxset requires min 2 books after deletion")
       bookList = bookList diff deleteBookList
-      getTotalCost(request, deleteBookList, deleteBookList.size()).map(totalCost => {
+      getTotalCost(request, deleteBookList, deleteBookList.size(), updatedVisibility = "default").map(totalCost => {
 
         cost = (cost - (totalCost * 0.80)).asInstanceOf[Number].longValue()
         request.getRequest.put("bookList", bookList)
