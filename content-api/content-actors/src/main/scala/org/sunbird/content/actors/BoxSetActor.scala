@@ -67,7 +67,7 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
         val versionKey: String = node1.getMetadata.getOrDefault("versionKey", "").asInstanceOf[String]
 
         val book_update_value = new util.HashMap[String, Object]()
-        book_update_value.putAll(Map("versionKey" -> versionKey,"identifier" -> book, "visibility" -> updatedVisibility).asJava)
+        book_update_value.putAll(Map("versionKey" -> versionKey, "visibility" -> updatedVisibility).asJava)
         book_update.copyRequestValueObjects(book_update_value)
 
         book_update.setOperation("updateBook")
@@ -81,7 +81,7 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
           Future(node2)
         })
 
-        getTotalCost(request,BookList, size-1, total+cost)
+        getTotalCost(request,BookList, size-1, total+cost, updatedVisibility)
       }).flatMap(f=>f)
     }
   }
@@ -134,8 +134,10 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
 
         request.getRequest.remove("mode", "edit")
         request.getRequest.remove("fields", request.getRequest.get("fields"))
+        request.getRequest.remove("identifier", request.getRequest.get("identifier"))
 
-//        println(bookList, newBookList, cost, bookCost, "RRRRRRRRR")
+
+        //        println(bookList, newBookList, cost, bookCost, "RRRRRRRRR")
 //        println("444", request, request.getParams)
 
         println(request, "final+++++++++")
@@ -213,6 +215,7 @@ class BoxSetActor @Inject()(implicit oec: OntologyEngineContext) extends BaseAct
 
         request.getRequest.remove("mode", "edit")
         request.getRequest.remove("fields", request.getRequest.get("fields"))
+        request.getRequest.remove("identifier", request.getRequest.get("identifier"))
 
         print(request, "final+++++++++")
 
